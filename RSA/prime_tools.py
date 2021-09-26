@@ -53,9 +53,3 @@ def generate_primes(keysize=1024):
         n = random.randrange(pow(2, keysize - 1), pow(2, keysize))
         if is_prime(n):
             return n
-
-
-if __name__ == '__main__':
-    # print(miller_rabin(83, 40))
-    for _ in range(10):
-        print(generate_primes(4096))
