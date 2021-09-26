@@ -4,7 +4,7 @@ import json
 from os import path
 
 
-def write_to_file(to_save, filename="data.json"):
+def write_to_file(to_save, filename="data/data.json"):
     data = {}
     if not path.exists(filename):
         with open(filename, "w") as file:
