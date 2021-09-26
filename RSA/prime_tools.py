@@ -46,8 +46,8 @@ def is_prime(n, method=miller_rabin, k=5):
     return method(n, k)
 
 
-def generate_primes(keysize=1024):
+def generate_primes(key_size=1024):
     while True:
-        n = random.randrange(pow(2, keysize - 1), pow(2, keysize))
+        n = random.randrange(pow(2, key_size - 1), pow(2, key_size))
         if is_prime(n):
             return n
