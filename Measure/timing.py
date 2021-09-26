@@ -1,7 +1,7 @@
-import functools
 import time
 import json
 from os import path
+from RSA.prime_tools import *
 
 
 def write_to_file(to_save, filename="data/data.json"):
@@ -13,25 +13,25 @@ def write_to_file(to_save, filename="data/data.json"):
         data = json.load(file)
     for k, v in to_save.items():
         if k not in data:
-            data[k] = {"total": 0, "count": 0, "average": 0}
+            data[k] = {"total": 0, "count": 0, "average": 0, "min": 0, "max": 0}
         data[k]["total"] += v
         data[k]["count"] += 1
         data[k]["average"] = data[k]["total"] / data[k]["count"]
+        if data[k]["min"] > v:
+            data[k]["min"] = v
+        if data[k]["max"] < v:
+            data[k]["max"] = v
     with open(filename, "w") as file:
         json.dump(data, file)
 
 
-def timed(result_method="file"):
-    def decorator_timed(func):
-        @functools.wraps(func)
-        def time_of_func(*args, **kwargs):
-            start_time = time.perf_counter_ns()
-            value = func(*args, **kwargs)
-            run_time = time.perf_counter_ns() - start_time
-            if result_method == "file":
-                write_to_file({f"{func.__name__}_{'_'.join([str(arg) for arg in args])}": run_time})
-            elif result_method == "print":
-                print(f"{func.__name__}: {run_time}secs")
-            return value
-        return time_of_func
-    return decorator_timed
+def timed(method, args=(), kwargs={}, result_method="file"):
+    start_time = time.perf_counter_ns()
+    method(*args, **kwargs)
+    run_time = time.perf_counter_ns() - start_time
+    if result_method == "file":
+        write_to_file({f"{method.__name__}{'_' if len(args) > 0 else ''}{'_'.join([str(arg) for arg in args])}": run_time})
+    elif result_method == "print":
+        print(f"{method.__name__}: {run_time/1000000000}seconds")
+    return run_time
+
