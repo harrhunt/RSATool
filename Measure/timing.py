@@ -25,7 +25,9 @@ def write_to_file(to_save, filename="data/data.json"):
         json.dump(data, file)
 
 
-def timed(method, args=(), kwargs={}, result_method="file"):
+def timed(method, args=(), kwargs=None, result_method="file"):
+    if kwargs is None:
+        kwargs = {}
     start_time = time.perf_counter_ns()
     method(*args, **kwargs)
     run_time = time.perf_counter_ns() - start_time
