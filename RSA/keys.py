@@ -1,7 +1,7 @@
+import os.path
 import random
 from RSA.prime_tools import generate_primes
 
-KEY_SIZES = [1024, 2048, 3072, 4096]
 DEFAULT_E_VALUE = 65537
 
 
@@ -34,10 +34,6 @@ def _validate_p_and_q(p, q, key_size):
 
 
 def generate_keys(key_size=1024, random_e=False):
-    # TODO: Calculate a shift between the prime numbers p and q
-    # TODO: Check if the prime numbers multiplied gets the number of bits specified
-    # TODO: if the primes are not acceptable, alternate changing p and q to limit the amount
-    #  of prime generations that need to be done
     prime_bit_length = key_size // 2
     offset = prime_bit_length // 16
     p_bit_length = prime_bit_length + offset
@@ -67,6 +63,8 @@ def generate_keys(key_size=1024, random_e=False):
 
 
 def save_keys(n, e, d, name):
+    if not os.path.exists("Keys"):
+        os.mkdir("Keys")
     filepath = f"Keys/{name}"
     with open(filepath, "w") as file:
         file.write(str(n))
@@ -136,34 +134,3 @@ class PublicKey(Key):
 
     def encrypt(self, message):
         return pow(message, self.e, self.n)
-
-
-# TODO: For encryption, do the following
-#  1. Pad the message to be the size of n
-#  2. Convert the message bytes to int
-#  3. Encrypt the message
-#  4. Convert the int back to bytes
-
-# TODO: For decryption, do the following
-#  1. Convert encrypted bytes to int
-#  2. Decrypt the message
-#  3. Convert the int to bytes
-#  4. Check for separation for padding
-
-
-if __name__ == '__main__':
-    nn, ee, dd = generate_keys(4096)
-    print(nn)
-    print(ee)
-    print(dd)
-    save_keys(nn, ee, dd, "4096")
-    priv_key, pub_key = load_keys("4096")
-    print(priv_key.n)
-    print(pub_key.n)
-    print(pub_key.e)
-    print(priv_key.d)
-    num = 123456789
-    en = pub_key.encrypt(num)
-    de = priv_key.decrypt(en)
-    print(en)
-    print(de)
