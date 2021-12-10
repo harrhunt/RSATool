@@ -25,7 +25,7 @@ def write_to_file(to_save, filename="data/data.json"):
         json.dump(data, file)
 
 
-def timed(method, args=(), kwargs=None, result_method="file"):
+def old_timed(method, args=(), kwargs=None, result_method="file"):
     if kwargs is None:
         kwargs = {}
     start_time = time.perf_counter_ns()
@@ -37,3 +37,24 @@ def timed(method, args=(), kwargs=None, result_method="file"):
         print(f"{method.__name__}: {run_time/1000000000}seconds")
     return run_time
 
+
+def timed(method, args=(), kwargs=None, runs=1, name="", ret_val=False):
+    if kwargs is None:
+        kwargs = {}
+    total_time = 0
+    method_ret_val = None
+    for _ in range(runs):
+        start_time = time.perf_counter_ns()
+        method_ret_val = method(*args, **kwargs)
+        run_time = time.perf_counter_ns() - start_time
+        total_time += run_time
+    results = {f"{method.__name__}{'_' if name else ''}{name}": {"total_time_ns": total_time,
+                                                                 "average_time_ns": total_time / runs,
+                                                                 "total_time": total_time / 1000000000,
+                                                                 "average_time": (total_time / runs) / 1000000000,
+                                                                 "runs": runs
+                                                                 }}
+    if ret_val:
+        return method_ret_val, results
+    else:
+        return results
