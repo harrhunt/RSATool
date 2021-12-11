@@ -1,9 +1,7 @@
-import os
-
-from RSA.crypto import load_keys, encrypt, decrypt, encrypt_file, decrypt_file
-from RSA.keys import PublicKey, PrivateKey, generate_keys, save_keys
+from RSA.crypto import encrypt, decrypt, encrypt_file, decrypt_file
+from RSA.keys import PublicKey, PrivateKey, generate_keys, save_keys, load_keys
 from Measure.timing import timed
-from os import listdir, remove, urandom
+from os import listdir, remove, urandom, makedirs
 import os.path as path
 from datetime import date
 import time
@@ -31,9 +29,10 @@ def show_help(*args):
             if command in COMMANDS_HELP:
                 print(COMMANDS_HELP[command])
             else:
-                print(f"There is no command {command}. Please use 'help' to see available commands.")
+                print(f"There is no command '{command}'. Please use 'help' to see available commands.")
     else:
-        possible_commands = "\n".join(sorted(COMMANDS.keys()))
+        possible_commands = "\n".join(COMMANDS.keys())
+        print("Type 'help <command name>' to get more information on a specific command.")
         print(f"The available commands are:\n{possible_commands}")
 
 
@@ -70,7 +69,7 @@ def load_given_keys(*args):
             global PVK, PBK
             PVK, PBK = load_keys(key_name)
             if not all([PVK, PBK]):
-                print(f"Failed to load key with name {key_name}!")
+                print(f"Failed to load key with name '{key_name}'!")
     else:
         print("Improper number of arguments!")
         print("loadkey usage:")
@@ -100,11 +99,11 @@ def delete_given_key(*args):
                     if key_name == PVK.name and key_name == PBK.name:
                         PVK, PBK = None, None
             else:
-                print(f"No such key {key_name}")
+                print(f"No such key '{key_name}'")
     else:
         print("Improper number of arguments!")
-        print("keylist usage:")
-        print(COMMANDS_HELP["keylist"])
+        print("delkey usage:")
+        print(COMMANDS_HELP["delkey"])
 
 
 def encrypt_message_or_file(*args):
@@ -120,7 +119,7 @@ def encrypt_message_or_file(*args):
                 if path.exists(filepath):
                     encrypt_file(filepath, PBK)
                 else:
-                    print(f"No such file {filepath} exists!")
+                    print(f"No such file '{filepath}' exists!")
             else:
                 message = val_args[0]
                 encrypted = encrypt(message.encode("utf-8"), PBK)
@@ -164,23 +163,30 @@ def decrypt_message_or_file(*args):
 def timed_data_gather(*args):
     results = {}
     runs = TESTING_CONFIG["num_of_runs"]
-    for key_size in TESTING_CONFIG["key_sizes"]:
+    num_key_sizes = len(TESTING_CONFIG["key_sizes"])
+    num_message_sizes = len(TESTING_CONFIG["message_sizes"])
+    for i, key_size in enumerate(TESTING_CONFIG["key_sizes"]):
         key_gen_res = timed(generate_keys, (2048,), runs=runs, name=f"{key_size}")
         results.update(key_gen_res)
 
         pvk, pbk = load_keys(str(key_size))
-        for message_size in TESTING_CONFIG["message_sizes"]:
+        for j, message_size in enumerate(TESTING_CONFIG["message_sizes"]):
             message = urandom(message_size)
-            enc_message, enc_res = timed(encrypt, (message, pbk), runs=runs, name=f"{message_size}_{key_size}", ret_val=True)
-            dec_message, dec_res = timed(decrypt, (enc_message, pvk), runs=runs, name=f"{message_size}_{key_size}", ret_val=True)
+            enc_message, enc_res = timed(encrypt, (message, pbk), runs=runs, name=f"{message_size}_{key_size}",
+                                         ret_val=True)
+            dec_message, dec_res = timed(decrypt, (enc_message, pvk), runs=runs, name=f"{message_size}_{key_size}",
+                                         ret_val=True)
             if message != dec_message:
                 print("MESSAGES DO NOT MATCH")
                 return
             results.update(enc_res)
             results.update(dec_res)
+            print((((i * num_message_sizes) + (j + 1)) / (num_key_sizes * num_message_sizes)) * 100, "%")
     if not path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-    with open(path.join(DATA_DIR, f"{date.today().isoformat()}_{time.localtime().tm_hour}-{time.localtime().tm_min}-{time.localtime().tm_sec}.json"), "w") as file:
+        makedirs(DATA_DIR)
+    with open(path.join(DATA_DIR,
+                        f"{date.today().isoformat()}_{time.localtime().tm_hour}-{time.localtime().tm_min}-{time.localtime().tm_sec}.json"),
+              "w") as file:
         json.dump(results, file)
 
 
@@ -231,6 +237,7 @@ def _validate_input(value, val_type):
 
 
 def main():
+    print("Welcome to RSA Tool. Type 'help' to see a list of commands.")
     while 1:
         user_input = input(f"{PBK.name + '-' + str(PBK.bit_length) if PBK else str()}:> ")
         if user_input == "":
