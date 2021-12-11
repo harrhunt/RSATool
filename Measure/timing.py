@@ -1,7 +1,6 @@
 import time
 import json
 from os import path
-from RSA.prime_tools import *
 
 
 def write_to_file(to_save, filename="data/data.json"):
@@ -43,15 +42,25 @@ def timed(method, args=(), kwargs=None, runs=1, name="", ret_val=False):
         kwargs = {}
     total_time = 0
     method_ret_val = None
+    max_time = 0
+    min_time = float('inf')
     for _ in range(runs):
         start_time = time.perf_counter_ns()
         method_ret_val = method(*args, **kwargs)
         run_time = time.perf_counter_ns() - start_time
+        if run_time < min_time:
+            min_time = run_time
+        if run_time > max_time:
+            max_time = run_time
         total_time += run_time
     results = {f"{method.__name__}{'_' if name else ''}{name}": {"total_time_ns": total_time,
                                                                  "average_time_ns": total_time / runs,
+                                                                 "minimum_time_ns": min_time,
+                                                                 "maximum_time_ns": max_time,
                                                                  "total_time": total_time / 1000000000,
                                                                  "average_time": (total_time / runs) / 1000000000,
+                                                                 "minimum_time": min_time / 1000000000,
+                                                                 "maximum_time": max_time / 1000000000,
                                                                  "runs": runs
                                                                  }}
     if ret_val:
