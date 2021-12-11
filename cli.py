@@ -161,33 +161,39 @@ def decrypt_message_or_file(*args):
 
 
 def timed_data_gather(*args):
-    results = {}
-    runs = TESTING_CONFIG["num_of_runs"]
-    num_key_sizes = len(TESTING_CONFIG["key_sizes"])
-    num_message_sizes = len(TESTING_CONFIG["message_sizes"])
-    for i, key_size in enumerate(TESTING_CONFIG["key_sizes"]):
-        key_gen_res = timed(generate_keys, (2048,), runs=runs, name=f"{key_size}")
-        results.update(key_gen_res)
+    confirm = input("WARNING! This could take several hours! Are you sure you would like to continue?").lower() in ["y", "yes"]
+    if confirm:
+        results = {}
+        runs = TESTING_CONFIG["num_of_runs"]
+        num_key_sizes = len(TESTING_CONFIG["key_sizes"])
+        num_message_sizes = len(TESTING_CONFIG["message_sizes"])
+        for i, key_size in enumerate(TESTING_CONFIG["key_sizes"]):
+            key_gen_res = timed(generate_keys, (2048,), runs=runs, name=f"{key_size}")
+            results.update(key_gen_res)
 
-        pvk, pbk = load_keys(str(key_size))
-        for j, message_size in enumerate(TESTING_CONFIG["message_sizes"]):
-            message = urandom(message_size)
-            enc_message, enc_res = timed(encrypt, (message, pbk), runs=runs, name=f"{message_size}_{key_size}",
-                                         ret_val=True)
-            dec_message, dec_res = timed(decrypt, (enc_message, pvk), runs=runs, name=f"{message_size}_{key_size}",
-                                         ret_val=True)
-            if message != dec_message:
-                print("MESSAGES DO NOT MATCH")
-                return
-            results.update(enc_res)
-            results.update(dec_res)
-            print((((i * num_message_sizes) + (j + 1)) / (num_key_sizes * num_message_sizes)) * 100, "%")
-    if not path.exists(DATA_DIR):
-        makedirs(DATA_DIR)
-    with open(path.join(DATA_DIR,
-                        f"{date.today().isoformat()}_{time.localtime().tm_hour}-{time.localtime().tm_min}-{time.localtime().tm_sec}.json"),
-              "w") as file:
-        json.dump(results, file)
+            pvk, pbk = load_keys(str(key_size))
+            if not all([pvk, pbk]):
+                generate_new_key((str(key_size), key_size))
+                pvk, pbk = load_keys(str(key_size))
+
+            for j, message_size in enumerate(TESTING_CONFIG["message_sizes"]):
+                message = urandom(message_size)
+                enc_message, enc_res = timed(encrypt, (message, pbk), runs=runs, name=f"{message_size}_{key_size}",
+                                             ret_val=True)
+                dec_message, dec_res = timed(decrypt, (enc_message, pvk), runs=runs, name=f"{message_size}_{key_size}",
+                                             ret_val=True)
+                if message != dec_message:
+                    print("MESSAGES DO NOT MATCH")
+                    return
+                results.update(enc_res)
+                results.update(dec_res)
+                print((((i * num_message_sizes) + (j + 1)) / (num_key_sizes * num_message_sizes)) * 100, "%")
+        if not path.exists(DATA_DIR):
+            makedirs(DATA_DIR)
+        with open(path.join(DATA_DIR,
+                            f"{date.today().isoformat()}_{time.localtime().tm_hour}-{time.localtime().tm_min}-{time.localtime().tm_sec}.json"),
+                  "w") as file:
+            json.dump(results, file)
 
 
 def exit_cli(*args):
