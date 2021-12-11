@@ -53,6 +53,8 @@ def generate_new_key(*args):
 
 def list_available_keys(*args):
     if len(args) < 1:
+        if not path.exists('Keys'):
+            makedirs('Keys')
         key_list = "\n".join(sorted([key for key in listdir('Keys') if ".pub" not in key]))
         print(key_list)
     else:
