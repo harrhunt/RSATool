@@ -163,7 +163,7 @@ def decrypt_message_or_file(*args):
 
 
 def timed_data_gather(*args):
-    confirm = input("WARNING! This could take several hours! Are you sure you would like to continue?").lower() in ["y", "yes"]
+    confirm = input("WARNING! This could take several hours! Are you sure you want to continue? ").lower() in ["y", "yes"]
     if confirm:
         results = {}
         runs = TESTING_CONFIG["num_of_runs"]
