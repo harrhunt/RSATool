@@ -74,8 +74,8 @@ def load_given_keys(*args):
                 print(f"Failed to load key with name '{key_name}'!")
     else:
         print("Improper number of arguments!")
-        print("loadkey usage:")
-        print(COMMANDS_HELP["loadkey"])
+        print("load usage:")
+        print(COMMANDS_HELP["load"])
 
 
 def unload_current_keys(*args):
@@ -84,8 +84,8 @@ def unload_current_keys(*args):
         PVK, PBK = None, None
     else:
         print("Improper number of arguments!")
-        print("unloadkey usage:")
-        print(COMMANDS_HELP["loadkey"])
+        print("unload usage:")
+        print(COMMANDS_HELP["load"])
 
 
 def delete_given_key(*args):
